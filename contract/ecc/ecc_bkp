@@ -1,0 +1,1252 @@
+package main
+import (
+	"fmt"
+	//"time"
+	"crypto/ecdsa"
+	"strconv"
+	"encoding/base64"
+	"crypto/sha256"
+	"math/big"
+	"math"
+	"crypto/x509"
+	"encoding/json"
+	"net/http"
+	"strings"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+)
+
+type TimeStampChecker struct{}
+
+func main() {
+	err := shim.Start(new(TimeStampChecker))
+	if err != nil {
+		fmt.Printf("Error starting BlockchainID: %s", err)
+	}
+}
+
+func (t *TimeStampChecker) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	// We could initialize.
+	//init_pubkeyStr1 := "h_01_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP2Eu7MOvX3BfGm4WmbhhWXnNtZzVlGJXXtEkZDQD/Su/VvqZB0VrA/UHPYH6a0q2uBH/ohT2UDxPBkg+nvg3BA==_0"
+	                    //ll_01_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP2Eu7MOvX3BfGm4WmbhhWXnNtZzVlGJXXtEkZDQD/Su/VvqZB0VrA/UHPYH6a0q2uBH/ohT2UDxPBkg+nvg3BA==
+	
+	//init_pubkeyStr2 := "m_02_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIdiwVkjtwggcGsg5Ed9U5vCZR68aXuYmkKewJYnW545QgTRdwOZa87Lu7XqDiH9P3JjcZooMNNEwuKKm4v3kXg==_0"
+	//init_pubkeyStr3 := "m_03_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAED0Vcx9C8JSauPGTm/Kvb/DoNsxVzfqagh3nukKgXTnJWAlbE03D3r5fDs6iu+uob3WFC+4/h4Paah5jBAPtlIQ==_0"
+	//init_pubkeyStr4 := "m_04_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHGzZTgEWtSKltIByemHRNzCJC78xhKp8osL8n9gZfBx+gddHDxNzYXRQC22UHjk4WpnnliCLbKUdq+m8uinsQg==_0"
+
+	init_pubkeyStr5 := "hl_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEGOmTWuTi32TyMWkMXB8teTfwMhypKz67dAC4RREAKnQ9iOJAqNEdTVTzezB888oL8EkHcE/mq0iAD+2Fhs4/jw==_0"
+	init_pubkeyStr6 := "hl_02_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAExXYnpqLkiDBYgvkdWpnWrtN8/wOdUPON0Cgm5xEJJbUbNufG4bjnxhNYTkf2qEspZTghtyKlxHsNcU6u+JrBhQ==_0"
+	init_pubkeyStr7 := "hl_03_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAER4tt2qt+S1+jST7ERrdVbyJx0Zqz76H2qTN66IyYJsnSAIQ6NYYxWDS/o6G7aEn/TM9yPuVqod1PCgidBzT7fQ==_0"
+	init_pubkeyStr8 := "hl_04_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhuqvZL/BFqShsXbv7QjOjHGf4FqhruaNHLr5Ilmw+CBbNAGJ1Gz1SadAhskmi8F5iaAZPis4VT3assrbKAXjPQ==_0"
+
+	//init_pubkeyStr9 := "mf_01_MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEI0Ga8ABFC3vvN2+Vv1LD8innJAQbAgr/+ST8PUlJoOZyhjLGTXhSBsGuvv3LBsyvUoXYn6j+Mfog14tVjnS+qg==_0"
+
+	//stub.PutState(init_pubkeyStr1, []byte("activekey"))
+	//stub.PutState(init_pubkeyStr2, []byte("activekey"))
+	//stub.PutState(init_pubkeyStr3, []byte("activekey"))
+	//stub.PutState(init_pubkeyStr4, []byte("activekey"))
+	
+	stub.PutState(init_pubkeyStr5, []byte("activekey"))
+	stub.PutState(init_pubkeyStr6, []byte("activekey"))
+	stub.PutState(init_pubkeyStr7, []byte("activekey"))
+	stub.PutState(init_pubkeyStr8, []byte("activekey"))
+
+	//stub.PutState(init_pubkeyStr9, []byte("activekey"))
+
+	return nil, nil
+}
+
+func (t *TimeStampChecker) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	switch function {	
+	case "verifymeter_sc":
+		return t.verifyMeterContract(stub, args)
+
+	case "putproposal_sc":
+		return t.putproposal(stub, args)
+
+	case "voteproposal_sc":
+		return t.voteproposal(stub, args)
+	
+	case "anomalydetection_sc":
+		return t.anomalydetection(stub, args)
+
+	case "demoanomalydetection_sc":
+		return t.demoanomalydetection(stub, args)
+
+	case "filler_sc":
+		return t.filler(stub, args)
+
+	case "frequencyreport_sc":
+		return t.frequencyreport(stub, args)
+
+		
+	case "addwaterreading_sc":
+		return t.addwaterreading(stub, args)
+
+		
+
+	case "checkchange_sc":
+		return t.checkchange(stub, args)
+	}
+	return nil, nil
+}
+
+func (t *TimeStampChecker) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	clientkey := args[0]
+	entitystr := args[1]
+   var flag bool
+	val, _ := stub.GetState(clientkey)//provide client key to get value from ledger if exists
+	
+	if strings.Contains(string(val), "firmwareupdate"){
+		splitstr := strings.Split(string(val), "_")
+		votestartblock := splitstr[1] 
+		height, _ := strconv.Atoi(votestartblock)
+		flag, _ = verifyCooldowntimeElapsed(height)
+		if val == nil || flag == false {
+			return []byte("Hash key NOT FOUND. Try waiting for firmware update cooldown time"), nil
+			//return nil, fmt.Errorf("Key does not exist ... %s" + args[0])//see on bc log
+		}else if strings.Contains(string(val), "firmwareupdate") {//&& flag == true{
+			stub.PutState(clientkey, []byte("Firmware_hash_APPROVED"))// []byte(clienttimestamp))	
+			return []byte("Download firmware update GRANTED for Hash key::" + clientkey), nil
+		}
+	}
+	
+	if entitystr == "querymeter" {
+		if val == nil {
+			return []byte("key val NOT FOUND...sorry...." + clientkey), nil
+			//return nil, fmt.Errorf("Key does not exist ... %s" + args[0])//see on bc log
+		}else{
+		return []byte("key FOUND::" + string(val)), nil
+		}
+	}
+
+	
+	if entitystr == "queryoneminute" {
+		if val == nil {
+			return []byte("QUERYONEMINUTE---->key val NOT FOUND...sorry...." + clientkey), nil
+			//return nil, fmt.Errorf("Key does not exist ... %s" + args[0])//see on bc log
+		}else{
+		return []byte("QUERYONEMINUTE key FOUND::" + string(val)), nil
+		}
+	}
+
+	
+	if entitystr == "querycheckchange" {
+		if val == nil {
+			return []byte("QUERYCHECKCHANGE---->key val NOT FOUND...sorry...." + clientkey), nil
+			//return nil, fmt.Errorf("Key does not exist ... %s" + args[0])//see on bc log
+		}else{
+		return []byte("QUERYCHECKCHANGE key FOUND::" + string(val)), nil
+		}
+	}
+
+	if entitystr == "publickeyquery" || entitystr == "proposalquery" || entitystr ==  "votequery" {
+		if val == nil {
+			return []byte("key val NOT FOUND...sorry."), nil
+			//return nil, fmt.Errorf("Key does not exist ... %s" + args[0])//see on bc log
+		}else{
+			value := string(val)
+			return []byte("key and val FOUND::" + clientkey + " " + value), nil
+		}
+	}	
+
+	if entitystr == "querywaterreading" {
+		if val == nil {
+			return []byte("QUERYWATERREADING--->key val NOT FOUND...sorry...." + clientkey), nil
+			//return nil, fmt.Errorf("Key does not exist ... %s" + args[0])//see on bc log
+		}else{
+
+		valstr := string(val)
+		s := strings.Split(valstr, ";")
+		firstreading := strings.Split(s[0], ",")
+		firstentry := firstreading[3]
+		firstflow  := firstreading[2] 
+		secondreading := strings.Split(s[1], ",")
+		secondentry := secondreading[3] 
+		secondflow  := secondreading[2] 
+
+		thirdreading := strings.Split(s[2], ",")
+		thirdentry := thirdreading[3]
+		thirdflow  := thirdreading[2] 
+ 
+		//tanklevels := firstentry+","+secondentry+","+thirdentry
+		//flowlevels := firstflow+","+secondflow+","+thirdflow
+
+		gallonstank3,_   := strconv.ParseFloat(firstentry, 64)
+		gallonstank1,_   := strconv.ParseFloat(secondentry, 64)
+		gallonstank2,_   := strconv.ParseFloat(thirdentry, 64) 
+
+		fpstank3,_   := strconv.ParseFloat(firstflow, 64)
+		fpstank1,_  := strconv.ParseFloat(secondflow, 64)
+		fpstank2,_   := strconv.ParseFloat(thirdflow, 64) 
+
+		//pi.r^2.h.(ft^3 to gallon cconversion factor)
+		//fullcapacitytank1 := 3.1415*float64(85/2)*float64(85/2)*32.1*7.48052
+		//fullcapacitytank2 := 3.1415*float64(50/2)*float64(50/2)*40.3*7.48052
+		//fullcapacitytank3 := 3.1415*float64(164/2)*float64(164/2)*35.5*7.48052
+
+		pumpoffcapacitytank1 := 3.1415*42.5*42.5*28.1*7.48052
+		pumpoffcapacitytank2 := 3.1415*25.0*25.0*35.3*7.48052
+		pumpoffcapacitytank3 := 3.1415*82.0*82.0*30*7.48052
+
+		pumponcapacitytank1 := 3.1415*42.5*42.5*10.1*7.48052
+		pumponcapacitytank2 := 3.1415*25.0*25.0*30*7.48052
+		pumponcapacitytank3 := 3.1415*82.0*82.0*10*7.48052
+
+		var pumpstr1 string
+		var pumpstr2 string
+
+		if (( math.Abs(gallonstank1)/math.Abs(pumpoffcapacitytank1) )>1){
+			pumpstr1 = "Pump 335 is OFF as water level in Tank 1 is above the UPPERBOUND condition required "
+		}
+		if (( math.Abs(gallonstank2)/math.Abs(pumpoffcapacitytank2) )>1 && (( math.Abs(gallonstank3)/math.Abs(pumpoffcapacitytank3) )>1)){
+			pumpstr2 = "Pump 10 is OFF as water level in Tank 2 and 3 are above the UPPERBOUND rules required"
+		}
+
+
+		var pump335str_open string
+		var pump335str_close string
+
+		if fpstank1>0 && (math.Abs(gallonstank1)>math.Abs(pumponcapacitytank1)){//tank 1 draining
+			floatpump335_open := math.Abs(gallonstank1-pumponcapacitytank1)/math.Abs(fpstank1)  
+			str335open := strconv.FormatFloat(floatpump335_open, 'f', 6, 64)
+			pump335str_open = "Estimated time in minutes to OPEN Pump335(2 MegaWatts power) to meet Tank 1 condition is :"+str335open 
+		
+		}
+		if fpstank1<0 && (math.Abs(gallonstank1)<math.Abs(pumpoffcapacitytank1)) {//tank 1 fillling and pump is on
+			floatpump335_close := (math.Abs(pumpoffcapacitytank1)-math.Abs(gallonstank1))/math.Abs(fpstank1)
+			str335close := strconv.FormatFloat(floatpump335_close, 'f', 6, 64)
+			pump335str_close = " Estimated time in minutes to CLOSE Pump335(2 MegaWatts power) to meet Tank 1 condition is :" +str335close    
+		}
+
+		var pump10str_open_tank3 string
+		var pump10str_open_tank2 string
+		if fpstank3>0 && (math.Abs(gallonstank3)>math.Abs(pumponcapacitytank3)){//tank 3 draining
+			floatpump10_open := math.Abs(gallonstank3-pumponcapacitytank3)/math.Abs(fpstank3)
+			str10open := strconv.FormatFloat(floatpump10_open, 'f', 6, 64)
+		    pump10str_open_tank3 = "Estimated time in minutes to OPEN Pump10(2 MegaWatts power) to meet Tank 3 rule is :" +str10open 
+		}
+		if fpstank2>0 && (math.Abs(gallonstank2)>math.Abs(pumponcapacitytank2)){//#tank 2 draining
+			floatpump10_open := math.Abs(gallonstank2-pumponcapacitytank2)/math.Abs(fpstank2)
+			str10open := strconv.FormatFloat(floatpump10_open, 'f', 6, 64)
+			pump10str_open_tank2 = "Estimated time in minutes to OPEN Pump10(2 MegaWatts power) to meet Tank 2 rule is :"  + str10open
+		}
+
+		var pump10str_close_tank3 string
+		var pump10str_close_tank2 string
+		if fpstank3<0 && (math.Abs(gallonstank3)<math.Abs(pumpoffcapacitytank3)){//tank 3 filling
+			floatpump10_close := (math.Abs(pumpoffcapacitytank3)-math.Abs(gallonstank3))/math.Abs(fpstank3)
+			str10close := strconv.FormatFloat(floatpump10_close, 'f', 6, 64)
+		    pump10str_close_tank3 = "Estimated time in minutes to CLOSE Pump10(2 MegaWatts power) to meet Tank 3 rule is :" +str10close 
+		}
+		if fpstank2<0 && (math.Abs(gallonstank2)<math.Abs(pumpoffcapacitytank2)){//#tank 2 filling
+			floatpump10_close := (math.Abs(pumpoffcapacitytank2)-math.Abs(gallonstank2))/math.Abs(fpstank2)
+			str10close := strconv.FormatFloat(floatpump10_close, 'f', 6, 64)
+			pump10str_close_tank2 = "Estimated time in minutes to CLOSE Pump10(2 MegaWatts power) to meet Tank 2 rule is :"  + str10close
+		}
+
+
+		//return []byte("QUERYWATERREADING TANK LEVELS FOUND::" + tanklevels +"..."+flowlevels), nil
+		return []byte("QUERYWATERREADING TANK LEVELS FOUND::" + pumpstr1 +"..."+pumpstr2+ "..."+pump335str_open+"..."+pump335str_close+"..."+pump10str_open_tank3+"..."+pump10str_open_tank2+"..."+pump10str_close_tank3+"..."+pump10str_close_tank2), nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (t *TimeStampChecker) verifyMeterContract(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	//clienttimestamp := args[0]
+	pubkeyStr       := args[1]
+	hashstr := args[2]
+	raw_r := args[3]
+	raw_s := args[4]
+
+	splitstr := strings.Split(hashstr, "_")
+	hashonly := splitstr[0]
+	clienttimestamp := splitstr[1] 	
+
+	splitstr = strings.Split(pubkeyStr, "_")
+	pubkeysolo := splitstr[3] 	
+
+	val, _ := stub.GetState(pubkeyStr)//provide client key to get value from ledger if exists
+	if  string(val) != "activekey" {
+	   return []byte("Proposer key not found on Blockchain"), fmt.Errorf("Proposer key not found on Blockchain")					
+	}
+
+	raw, _ := base64.StdEncoding.DecodeString(pubkeysolo)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+	intblockheight, _ := strconv.Atoi(clienttimestamp)
+	flag, _ := blockSkewChecker(intblockheight)
+	if (flag == false && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		val, _ := stub.GetState(hashonly)//provide client key to get value from ledger if exists
+		if  val == nil {
+			stub.PutState(hashonly, []byte("SUSPICIOUS tx outside time period Meterhash PASSED Signature Validation," + pubkeyStr))
+		}
+		return []byte("Outside allowed time period marked as suspicous..."), nil		
+	
+	}else if(ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		val, _ := stub.GetState(hashonly)//provide client key to get value from ledger if exists
+		if  val == nil {
+			stub.PutState(hashonly, []byte("Meterhash PASSED Validation," + pubkeyStr))
+		}
+		return []byte("Signature verification passed"), nil	
+	}
+	
+	return []byte("Signature verification failed"), fmt.Errorf("Signature verification failed")
+}
+
+
+
+
+func (t *TimeStampChecker) demoanomalydetection(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	//clienttimestamp := args[0]
+	pubkeyStr := args[1]
+	rawstr := args[2]
+	raw_r := args[3]
+	raw_s := args[4]
+
+	splitstr := strings.Split(rawstr, ",")
+	meterid := splitstr[0]
+	passedUTC := splitstr[1]
+	strcurrent := splitstr[2]
+	strvoltage := splitstr[3]
+	strfrequency := splitstr[6]
+	//clientreturnedblockheight := splitstr[8]
+
+	current, _ := strconv.ParseFloat(strcurrent,64)			
+	frequency, _ := strconv.ParseFloat(strfrequency,64)
+	voltage, _ := strconv.ParseFloat(strvoltage,64)		
+
+
+	makekey := meterid + "_" + passedUTC	
+	splitstr = strings.Split(pubkeyStr, "_")
+	pubkeysolo := splitstr[3] 	
+
+	val, _ := stub.GetState(pubkeyStr)//provide client key to get value from ledger if exists
+	if  string(val) != "activekey" {
+	   return []byte("Proposer key not found on Blockchain"), fmt.Errorf("Proposer key not found on Blockchain")					
+	}
+
+	raw, _ := base64.StdEncoding.DecodeString(pubkeysolo)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+	//intblockheight, _ := strconv.Atoi(clientreturnedblockheight)
+	//flag, _ := blockSkewChecker(intblockheight)
+
+	/*if (flag == false && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (rawstr), r, s) ){
+		val, _ := stub.GetState(makekey)//provide client key to get value from ledger if exists
+		if  val == nil {
+			stub.PutState(makekey, []byte(rawstr +",SUSPICIOUS blockheight"))
+		}
+		return []byte("Outside allowed time period marked as suspicous..."), nil		
+	
+	}else*/
+	
+	frequencyanomalyreport := ""
+	voltageanomalyreport := ""
+	currentanomalyreport := ""
+
+	//avgstartwindow  := 0.0
+	//avgcurrent   := 0.0
+	//count        := 0
+	//window_size := 5 //change here to modify window
+
+	if(ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (rawstr), r, s) ){
+		val, _ := stub.GetState(makekey)//provide client key to get value from ledger if exists
+		if  val == nil {
+			/*do anomaly checks here*/
+			if(frequency<40){
+				frequencyanomalyreport = "FrequencyAnomaly::" + meterid + "_" +  passedUTC + "_" + strfrequency + " "
+			}else if frequency >60{
+				frequencyanomalyreport = "FrequencyAnomaly::" + " " + meterid + "_" +  passedUTC + "_" + strfrequency + " "
+			}
+
+			if(voltage<200){
+				voltageanomalyreport = "VoltageAnomaly::" + meterid + "_" +  passedUTC + "_" + strvoltage + " "
+			}else if voltage >250{
+				voltageanomalyreport = "VoltageAnomaly::" + " " + meterid + "_" + passedUTC + "_" + strvoltage + " "
+			}
+
+			valcurrent, _ := stub.GetState(meterid+"_avgcurrent")
+
+			if  valcurrent != nil {
+
+				avgcurrentstr := string(valcurrent[:])
+				avgcurrent, _ := strconv.ParseFloat(avgcurrentstr,64)			
+
+				//avgcurrent =  avgcurrent + current
+
+				//stub.PutState(meterid+"_avgcurrent", []byte(avgcurrent))
+
+				valcount, _ := stub.GetState(meterid+"_count")
+				valcountstr := string(valcount[:])
+				count, _ := strconv.ParseInt(valcountstr,10,64)
+				latest_normalized_current := current/float64(count)
+				avgcurrent = avgcurrent + latest_normalized_current
+				if(count%5==0)				{
+					avgcurrent = (avgcurrent/2.28333)  // approximated window size 5 average, because 1+1/2+...+1/5=2.28333
+					count = 2
+				}
+
+				avgcurrent_stringed := strconv.FormatFloat(avgcurrent, 'f', 6, 64)
+				count = count+1
+				count_stringed      := strconv.FormatInt(count, 10)
+             
+				stub.PutState(meterid+"_avgcurrent", []byte(avgcurrent_stringed))
+				stub.PutState(meterid+"_count", []byte(count_stringed))
+
+
+				if current > (1.5*avgcurrent){//detect anonaly if current is more than 50% the average
+					currentanomalyreport =  "CurrentAnomaly::" + " " + meterid + "_" +  passedUTC + "_" + strcurrent + " "
+
+				}
+
+
+			}else{
+				onecount   := strconv.FormatInt(1, 10)
+				zerocurrent := strconv.FormatFloat(0.0, 'f', 6, 64)
+				stub.PutState(meterid+"_avgcurrent", []byte(zerocurrent))
+				stub.PutState(meterid+"_count", []byte(onecount))
+			}
+
+
+			valreport, _ := stub.GetState(meterid)
+			fetchedreport := string(valreport[:])
+
+			report := fetchedreport + frequencyanomalyreport + " " + voltageanomalyreport + " " + currentanomalyreport 
+			stub.PutState(meterid, []byte(report))
+
+		}
+		return []byte("Signature verification passed"), nil	
+	}	
+
+	return []byte("Signature verification failed"), fmt.Errorf("Signature verification failed")
+}
+
+
+
+
+func (t *TimeStampChecker) filler(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	//clienttimestamp := args[0]
+	pubkeyStr := args[1]
+	rawstr := args[2]
+	raw_r := args[3]
+	raw_s := args[4]
+	splitstr := strings.Split(pubkeyStr, "_")
+	makekey :=rawstr	
+	splitstr = strings.Split(pubkeyStr, "_")
+	pubkeysolo := splitstr[2]//since its hl 	
+
+	val, _ := stub.GetState(pubkeyStr)//provide client key to get value from ledger if exists
+	if  string(val) != "activekey" {
+	   return []byte("Proposer key not found on Blockchain"), fmt.Errorf("Proposer key not found on Blockchain")					
+	}
+
+	raw, _ := base64.StdEncoding.DecodeString(pubkeysolo)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+	
+
+	if(ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (rawstr), r, s) ){
+		val, _ := stub.GetState(makekey)//provide client key to get value from ledger if exists
+		if  val == nil {
+ 
+			stub.PutState(rawstr, []byte("added"))
+
+		}
+		return []byte("Signature verification passed"), nil	
+	}	
+
+	return []byte("Signature verification failed"), fmt.Errorf("Signature verification failed")
+}
+
+
+func (t *TimeStampChecker) frequencyreport(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	//clienttimestamp := args[0]
+	pubkeyStr := args[1]
+	rawstr := args[2]
+	raw_r := args[3]
+	raw_s := args[4]
+
+	splitstr := strings.Split(rawstr, ",")
+	meterid := splitstr[0]
+	utcstarttime := splitstr[1]
+	utcendtime := splitstr[2]
+
+	makekey := meterid + "_frequencyreport_" + utcstarttime + "_" + utcendtime
+	splitstr = strings.Split(pubkeyStr, "_")
+	pubkeysolo := splitstr[3] 	
+
+	val, _ := stub.GetState(pubkeyStr)//provide client key to get value from ledger if exists
+	if  string(val) != "activekey" {
+	   return []byte("Proposer key not found on Blockchain"), fmt.Errorf("Proposer key not found on Blockchain")					
+	}
+
+	raw, _ := base64.StdEncoding.DecodeString(pubkeysolo)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+	//intblockheight, _ := strconv.Atoi(clientreturnedblockheight)
+	//flag, _ := blockSkewChecker(intblockheight)
+	var startUTC int64
+	var endUTC   int64
+	var passedUTC int64
+
+	startUTC, _ = strconv.ParseInt(utcstarttime, 10, 64)
+	endUTC, _   = strconv.ParseInt(utcendtime, 10, 64)
+
+	
+	//startUTC = uint64(startUTCint)
+	//endUTC   = uint64(endUTCint)
+
+	frequencyanomalyreport := "FrequencyAnomaly::"
+	voltageanomalyreport := "VoltageAnomaly::"
+	currentanomalyreport := "CurrentAnomaly::"
+
+	if(ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (rawstr), r, s) ){
+		val, _ := stub.GetState(makekey)//provide client key to get value from ledger if exists
+		if  val == nil {
+			
+			current_avg := 0.0
+			historicUTC := startUTC - (300)//from 5 minutes earlier
+			counter :=0
+			for passedUTC = historicUTC ; passedUTC < startUTC ; passedUTC = passedUTC+10{ 
+				fetchkey := meterid + "_" + strconv.FormatInt(passedUTC, 10) 
+				fetchval, _ := stub.GetState(fetchkey)
+				
+				if  fetchval != nil {
+					rawstr = string(fetchval[:])
+					splitstr2  := strings.Split(rawstr, ",")
+					strcurrent := splitstr2[2]
+			
+					current, _ := strconv.ParseFloat(strcurrent,64)
+					current_avg += current
+					counter+=1
+				}
+			}//end for
+
+			current_avg = current_avg/float64(counter)
+
+			for passedUTC = startUTC ; passedUTC <= endUTC ; passedUTC = passedUTC+10{ 
+				fetchkey := meterid + "_" + strconv.FormatInt(passedUTC, 10) 
+				fetchval, _ := stub.GetState(fetchkey)
+				
+				if  fetchval != nil {
+					rawstr = string(fetchval[:])
+					splitstr2  := strings.Split(rawstr, ",")
+					strfrequency := splitstr2[6]
+					strvoltage := splitstr2[3]
+					strcurrent := splitstr2[2]
+			
+					current, _ := strconv.ParseFloat(strcurrent,64)			
+					frequency, _ := strconv.ParseFloat(strfrequency,64)
+					voltage, _ := strconv.ParseFloat(strvoltage,64)		
+
+					if(frequency<40){
+						frequencyanomalyreport = frequencyanomalyreport + meterid + "_" +  strconv.FormatInt(passedUTC, 10) + "_" + strfrequency + " "
+					}else if frequency >60{
+						frequencyanomalyreport = frequencyanomalyreport + meterid + "_" +  strconv.FormatInt(passedUTC, 10) + "_" + strfrequency + " "
+					}
+
+					
+					if(voltage<200){
+						voltageanomalyreport = voltageanomalyreport + meterid + "_" +  strconv.FormatInt(passedUTC, 10) + "_" + strvoltage + " "
+					}else if voltage >250{
+						voltageanomalyreport = voltageanomalyreport + meterid + "_" +  strconv.FormatInt(passedUTC, 10) + "_" + strvoltage + " "
+					}
+			
+					if current > (1.5*current_avg){//detect anonaly if current is more than 50% the average
+						currentanomalyreport = currentanomalyreport + meterid + "_" +  strconv.FormatInt(passedUTC, 10) + "_" + strcurrent + " "
+
+					}
+
+					//return []byte("Signature verification failed"), fmt.Errorf(fetchkey + "," + string(fetchval[:]) + "," + strfrequency + "," + strconv.Itoa(frequency) )
+
+				}//end if
+
+			}//end for
+
+
+			//strcurrentavg := fmt.Sprintf("%f", current_avg)
+			report := frequencyanomalyreport + " " + voltageanomalyreport + " " + currentanomalyreport 
+			stub.PutState(makekey, []byte(report))
+		}//outermost if
+		return []byte("Signature verification passed"), nil	
+	}	
+
+
+
+
+	return []byte("Signature verification failed"), fmt.Errorf("Signature verification failed")
+}
+
+
+
+func verifyCooldowntimeElapsed(votestartblock int) (bool, error) {
+	var blocknow int
+	endpoint := "127.0.0.1"
+	cooldowntime := 15//blocks
+	rs := findheight(endpoint)
+	blocknow = rs.Height
+
+	if blocknow> votestartblock + cooldowntime{
+		return true, nil} else{
+			return false, nil
+		}  
+
+}
+
+func blockSkewChecker(clientblock int) (bool, error) {
+	var blocknow int
+	endpoint := "127.0.0.1"
+	allowedskew:= 5//blocks
+	rs := findheight(endpoint)
+	blocknow = rs.Height
+	plusskew := blocknow + allowedskew
+	minusskew := blocknow - allowedskew
+
+	if clientblock>minusskew && clientblock<plusskew{
+		return true, nil} else{
+			return false, nil
+		}  
+
+}
+
+
+func checkhash(raw, hashpassed string) (bool, error) {
+
+	buf := []byte(raw)
+	sum := sha256.Sum256(buf)
+	//fmt.Println("Hashed value is:: ")
+	hashofraw :=  fmt.Sprintf("%x",sum)
+
+	if(hashofraw == hashpassed){
+		return true, nil
+	}
+	return false, nil
+}
+
+func (t *TimeStampChecker) putproposal(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	proposaltype := args[0]
+	proposerkey  := args[1]  
+	proposedkey  := args[2]
+	clienttimestamp := args[3]
+	hashstr := args[4]
+	raw_r := args[5]
+	raw_s := args[6]
+	var pubkeyStr_proposer string
+	var concatstr string
+	endpoint := "127.0.0.1"
+
+	
+	//fmt.Printf(h)
+	splitstr := strings.Split(proposerkey, "_")
+	proposer_level := splitstr[0] 	
+
+
+
+	if proposaltype == "addkey"{
+    	concatstr = proposedkey // + "_" + clienttimestamp
+	}
+	if proposaltype == "removekey"{
+    	concatstr = proposedkey
+	}
+	if proposaltype == "firmwareupdate"{
+    	concatstr = hashstr
+	}
+	if proposaltype == "vetoupdate"{
+    	concatstr = hashstr
+	}
+	if proposaltype == "pushmeterdata"{
+    	concatstr = hashstr
+	}
+
+
+	//check if client proposerkey exists on bc and parse it -- will work for LL 
+	 val, _ := stub.GetState(proposerkey)//provide client key to get value from ledger if exists
+	 if  proposer_level == "ll" && string(val) == "activekey" && (proposaltype == "addkey" || proposaltype == "removekey" ||proposaltype=="pushmeterdata") {
+		splitstr := strings.Split(proposerkey, "_")
+		pubkeyStr_proposer = splitstr[3]
+
+	 }else if (proposer_level == "hl" && string(val) == "activekey" && (proposaltype == "addkey" || proposaltype == "removekey" || proposaltype == "vetoupdate")) {
+		splitstr := strings.Split(proposerkey, "_")
+		pubkeyStr_proposer = splitstr[2]
+	 }else if proposer_level == "mf" && string(val) == "activekey" && proposaltype == "firmwareupdate" {
+		splitstr := strings.Split(proposerkey, "_")
+		pubkeyStr_proposer = splitstr[2]
+	 }else{
+		return []byte("Proposer key not found on Blockchain"), fmt.Errorf("Proposer key not found on Blockchain")					
+	 }
+	
+	pubkeyStr :=  pubkeyStr_proposer
+	raw, _ := base64.StdEncoding.DecodeString(pubkeyStr)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+
+
+
+	if( proposaltype == "pushmeterdata" /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		val, _ := stub.GetState(concatstr)//provide client key to get value from ledger if exists
+		if  val == nil {
+			//stub.PutState(concatstr + "_" +  clienttimestamp + "_addkey", []byte("proposed"))// []byte(clienttimestamp))
+			stub.PutState(concatstr, []byte("FOUND on BLOCKCHAIN"))// []byte(clienttimestamp))	
+			}else{
+			return []byte("Sorry, Key already exists -> " + concatstr), fmt.Errorf("Sorry key already exists..." + concatstr + "..." + string(val))			
+		}
+		return []byte("Signature verified successfully"), nil	
+	}
+
+
+
+
+	//flag, _ := TSchecker(clienttimestamp)
+	if( proposaltype == "addkey" /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		val, _ := stub.GetState(concatstr)//provide client key to get value from ledger if exists
+		if  val == nil {
+			stub.PutState(concatstr + "_" +  clienttimestamp + "_addkey", []byte("proposed"))// []byte(clienttimestamp))
+			stub.PutState(concatstr, []byte("null"))// []byte(clienttimestamp))	
+			}else{
+			return []byte("Sorry, Key already exists -> " + concatstr), fmt.Errorf("Sorry key already exists..." + concatstr + "..." + string(val))			
+		}
+		return []byte("Signature verified successfully"), nil	
+	}
+
+	if( proposaltype == "removekey" /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		
+		splitstr := strings.Split(concatstr, "_")
+		if splitstr[0] == "hl" || splitstr[0] =="mf"{
+			concatstr = splitstr[0] + "_" +splitstr[1] + "_" + splitstr[2] + "_" + splitstr[3]
+
+		}else if splitstr[0] == "ll"{
+			concatstr = splitstr[0] + "_" +splitstr[1] + "_" + splitstr[2] + "_" + splitstr[3]  +"_" + splitstr[4]			
+		}
+		//proposer_level := splitstr[0] 	
+
+		
+		
+		val, _ := stub.GetState(concatstr)//provide client key to get value from ledger if exists
+		if  string(val) == "activekey" {
+			stub.PutState(concatstr + "_removekey", []byte("proposed"))// []byte(clienttimestamp))
+			}else{
+			return []byte("Sorry, Key proposed for removal not active..."), fmt.Errorf("Sorry, Key proposed for removal not active...")			
+		}
+		return []byte("Signature verified successfully"), nil	
+	}
+	
+	if( proposaltype == "firmwareupdate" /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		rs := findheight(endpoint)
+		h := strconv.Itoa(rs.Height)	
+		stub.PutState(concatstr, []byte("firmwareupdate_" + h))// []byte(clienttimestamp))	
+		//stub.PutState(concatstr, []byte("Firmware_hash_APPROVED"))// []byte(clienttimestamp))	
+		return []byte("Firmware Signature verified successfully"), nil	
+	}
+
+	if( proposaltype == "vetoupdate" && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		val, _ := stub.GetState(concatstr)
+		splitstr := strings.Split(string(val), "_")
+		votestartblock := splitstr[1] 
+		height, _ := strconv.Atoi(votestartblock)
+		flag, _ := verifyCooldowntimeElapsed(height)
+		if flag == true{
+			return []byte("Firmware veto only possible in cooldown period..."), fmt.Errorf("Firmware veto only possible in cooldown period...")		
+		}
+		//rs := findheight(endpoint)
+		//h := strconv.Itoa(rs.Height)	
+		stub.PutState(concatstr, []byte("VETOED"))// []byte(clienttimestamp))	
+		//stub.PutState(concatstr, []byte("Firmware_hash_APPROVED"))// []byte(clienttimestamp))	
+		return []byte("Firmware Signature verified successfully"), nil	
+	}
+
+
+	
+
+
+	return []byte(concatstr), fmt.Errorf("Signature verification failed")
+}
+
+func (t *TimeStampChecker) voteproposal(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	voterpubkey := args[0]
+	//clienttimestamp := args[1]//vote start block height recorded in putproposal 
+	votestring := args[2]
+	raw_r      := args[3] 
+	raw_s      := args[4]
+
+	var pubkeyStr_voter string
+	
+	//check if client voterpubkey exists on bc and parse it  
+	val, _ := stub.GetState(voterpubkey)//provide client key to get value from ledger if exists
+	if  val != nil {
+	   splitstr := strings.Split(voterpubkey, "_")
+
+	   if splitstr[0] == "ll" { 
+			pubkeyStr_voter = splitstr[3]
+	   }else if splitstr[0] == "hl" { 
+			pubkeyStr_voter = splitstr[2]
+	   }
+    } else{
+	   return []byte("Voter key not found on Blockchain"), fmt.Errorf("Voter key not found on Blockchain")					
+	}
+
+	pubkeyStr :=  pubkeyStr_voter
+	raw, _ := base64.StdEncoding.DecodeString(pubkeyStr)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+
+	//flag, _ := TSchecker(clienttimestamp)
+	if( strings.Contains(votestring, "addkey") /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (votestring), r, s) ){
+		votestartblock := "null"
+		val, _ := stub.GetState(votestring)
+		splitstr := strings.Split(votestring, "_")
+
+		if splitstr[0] =="ll"{	
+			votestartblock = splitstr[4] 
+		} else if splitstr[0] == "hl"{	
+			votestartblock = splitstr[3] 
+		}
+
+		//return []byte("votestartblock..."), fmt.Errorf("votestartblock..." + votestartblock)	
+
+		height, _ := strconv.Atoi(votestartblock)
+		flag, _ := verifyCooldowntimeElapsed(height)
+		
+		if flag == true {
+			return []byte("Sorry, voting period for proposal ended..."), fmt.Errorf("addkey, Sorry, voting period for proposal ended...")	
+
+		}
+	
+		if(val == nil){
+			return []byte("Proposal does not exist..."), fmt.Errorf("Proposal does not exist...")
+		}else if(strings.Contains(string(val), pubkeyStr_voter)){
+			return []byte("Already voted, cannot vote again"), fmt.Errorf("Already voted, cannot vote again")	
+		}else{
+			//concat new key to val and put
+			stub.PutState(votestring, []byte(string(val) + "," + voterpubkey))
+		}
+		
+		numberofvotes := 0	
+		numberofvotes = strings.Count(string(val), ",")
+		
+		if(numberofvotes >= 2){//i.e. 3 votes
+			splitstr := strings.Split(votestring, "_addkey")
+			pubkeyStr_passedvoting := splitstr[0]
+			stub.PutState(pubkeyStr_passedvoting, []byte("activekey"))
+		}
+
+
+		return []byte("Voter Signature verified successfully"), nil	
+	}
+
+	if( strings.Contains(votestring, "removekey") /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (votestring), r, s) ){
+		votestartblock := "null"
+		splitstr := strings.Split(votestring, "_")
+
+		if splitstr[0] =="ll"{	
+			votestartblock = splitstr[5]
+			votestring = splitstr[0] + "_" +  splitstr[1] + "_" + splitstr[2] + "_" + splitstr[3]+ "_"  + splitstr[4] + "_"  + splitstr[6]
+		} else if splitstr[0] == "hl" || splitstr[0] == "mf" {	
+			votestartblock = splitstr[4] 
+			votestring = splitstr[0] + "_" +  splitstr[1] + "_" + splitstr[2] + "_" + splitstr[3]+ "_"  + splitstr[5]
+		}
+
+		height, _ := strconv.Atoi(votestartblock)
+		flag, _ := verifyCooldowntimeElapsed(height)
+		//return []byte("height..."), fmt.Errorf("height..." + votestartblock) 
+		
+		if flag == true {
+			return []byte("Sorry, voting period for proposal ended..."), fmt.Errorf("removekey, Sorry, voting period for proposal ended...")
+		}
+
+		val, _ := stub.GetState(votestring)
+		
+		//return []byte("votestring..."), fmt.Errorf(votestring)
+		if(val == nil){
+			return []byte("Proposal does not exist..."), fmt.Errorf("Proposal does not exist...")
+			//stub.PutState(votestring, []byte(voterpubkey))
+		}else if(strings.Contains(string(val), pubkeyStr_voter)){
+			return []byte("Already voted, cannot vote again"), fmt.Errorf("Already voted, cannot vote again")	
+		}else{
+			//concat new key to val and put
+			stub.PutState(votestring, []byte(string(val) + "," + voterpubkey))
+
+		}
+		numberofvotes := 0	
+		numberofvotes = strings.Count(string(val), ",")
+		
+		if(numberofvotes >= 2){//i.e. 3 votes
+			splitstr := strings.Split(votestring, "_removekey")
+			pubkeyStr_passedvoting := splitstr[0]
+			//stub.DelState(pubkeyStr_passedvoting)
+			stub.PutState(pubkeyStr_passedvoting, []byte("REMOVED key"))
+		}
+
+		return []byte("Voter Signature verified successfully"), nil	
+	}
+
+	return []byte("Voter Signature verification failed"), fmt.Errorf("Voter Signature verification failed")
+}
+
+func findheight(endpoint string) getResponse {
+	return getRequest(endpoint)
+}
+
+func getRequest(endpoint string) getResponse {
+	res, _ := http.Get("http://" + endpoint + ":7050/chain")
+	defer res.Body.Close()
+	var rs getResponse
+	json.NewDecoder(res.Body).Decode(&rs)
+	return rs
+}
+
+type getResponse struct {
+	Height            int    `json:"height,omitempty"`
+	CurrentBlockHash  string `json:"currentBlockHash,omitempty"`
+	PreviousBlockHash string `json:"previousBlockHash,omitempty"`
+}
+
+
+func (t *TimeStampChecker) anomalydetection(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	proposaltype := args[0]
+	proposerkey  := args[1]  
+	timestamp    := args[2]
+	//clienttimestamp := args[3]
+	hashstr := args[4]
+	raw_r := args[5]
+	raw_s := args[6]
+	var pubkeyStr_proposer string
+	var concatstr string
+	//endpoint := "127.0.0.1"
+
+	
+	//fmt.Printf(h)
+	splitstr := strings.Split(proposerkey, "_")
+	proposer_level := splitstr[0] 	
+
+	if proposaltype == "anomalydetection"{
+    	concatstr = hashstr
+	}
+
+
+	//check if client proposerkey exists on bc and parse it -- will work for LL 
+	val, _ := stub.GetState(proposerkey)//provide client key to get value from ledger if exists
+	if  proposer_level == "ll" && string(val) == "activekey" && (proposaltype=="anomalydetection") {
+		splitstr := strings.Split(proposerkey, "_")
+		pubkeyStr_proposer = splitstr[3]
+	}	
+	pubkeyStr :=  pubkeyStr_proposer
+	raw, _ := base64.StdEncoding.DecodeString(pubkeyStr)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+
+
+	if( proposaltype == "anomalydetection" /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (hashstr), r, s) ){
+		val, _ := stub.GetState(concatstr)//provide client key to get value from ledger if exists
+		if  val == nil {
+			//stub.PutState(concatstr + "_" +  clienttimestamp + "_addkey", []byte("proposed"))// []byte(clienttimestamp))
+			stub.PutState(timestamp,[]byte(concatstr))// []byte(clienttimestamp))	
+			}else{
+			return []byte("Sorry, Key already exists -> " + concatstr), fmt.Errorf("Sorry key already exists..." + concatstr + "..." + string(val))			
+		}
+		return []byte("Signature verified successfully"), nil	
+	}
+
+
+	return []byte(concatstr), fmt.Errorf("Signature verification failed")
+}
+
+
+
+func (t *TimeStampChecker) addwaterreading(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	proposaltype := args[0]
+	proposerkey  := args[1]  
+	timestamp    := args[2]
+	//clienttimestamp := args[3]
+	meterreading := args[4]
+	raw_r := args[5]
+	raw_s := args[6]
+	var pubkeyStr_proposer string
+	var concatstr string
+	var concatstr2 string
+	var strmins  string
+	var firstcumulative_oneminute_earlier string
+	var secondcumulative_oneminute_earlier string
+	var thirdcumulative_oneminute_earlier string
+
+
+	//endpoint := "127.0.0.1"
+
+	
+	//fmt.Printf(h)
+	splitstr := strings.Split(proposerkey, "_")
+	proposer_level := splitstr[0] 	
+
+	if proposaltype == "addwaterreading"{
+    	concatstr = meterreading
+	}
+
+
+	//check if client proposerkey exists on bc and parse it -- will work for LL 
+	val, _ := stub.GetState(proposerkey)//provide client key to get value from ledger if exists
+	if  proposer_level == "ll" && string(val) == "activekey" && (proposaltype=="addwaterreading") {
+		splitstr := strings.Split(proposerkey, "_")
+		pubkeyStr_proposer = splitstr[3]
+	}	
+	pubkeyStr :=  pubkeyStr_proposer
+	raw, _ := base64.StdEncoding.DecodeString(pubkeyStr)
+	pubKey, _ := x509.ParsePKIXPublicKey(raw)
+	rbytes, _ := base64.StdEncoding.DecodeString(raw_r)
+	sbytes, _ := base64.StdEncoding.DecodeString(raw_s)
+
+	r, s := big.NewInt(0), big.NewInt(0)
+	r.UnmarshalText(rbytes)
+	s.UnmarshalText(sbytes)
+
+
+	if( proposaltype == "addwaterreading" /*&& flag == true*/ && ecdsa.Verify(pubKey.(*ecdsa.PublicKey), []byte (meterreading), r, s) ){
+		val, _ := stub.GetState(timestamp)//provide client key to get value from ledger if exists
+		//zero := strconv.FormatInt(int64(0), 10)
+		if timestamp=="0_00"{
+			s := strings.Split(concatstr, ";")
+			firstreading := strings.Split(s[0], ",")
+			firstentry := firstreading[2] 
+			secondreading := strings.Split(s[1], ",")
+			secondentry := secondreading[2] 
+			thirdreading := strings.Split(s[2], ",")
+			thirdentry := thirdreading[2] 
+
+
+			s[0] = s[0] +","+firstentry+ ";"
+			s[1] = s[1] +","+secondentry+ ";"
+			s[2] = s[2] +","+thirdentry+ ";"
+			concatstr2 = s[0]+s[1]+s[2]
+		}else{
+			ts     := strings.Split(timestamp, "_")
+			hour,_ := strconv.ParseInt(ts[0], 10, 64)
+			mins,_ := strconv.ParseInt(ts[1], 10, 64)
+			
+			mins=mins-1
+			
+			if (mins)==-1 && hour>0{//get to one minute earlier
+				mins=59
+				if hour>0{
+					hour=hour-1
+				}
+			}
+			if mins<10{
+				//mins=mins-1
+				strmins= "0" +strconv.FormatInt(int64(mins), 10)
+			}else{
+				//mins=mins-1
+				strmins= strconv.FormatInt(int64(mins), 10)
+			}
+			
+			timestamp_a_minute_earlier := strconv.FormatInt(int64(hour), 10)+"_"+strmins
+			val_a_minute_earlier, _ := stub.GetState(timestamp_a_minute_earlier)
+
+			if val_a_minute_earlier!=nil{
+				//return []byte("val_a_minute_earlier -> " + string(val_a_minute_earlier)), fmt.Errorf("val_a_minute_earlier=" +string(val_a_minute_earlier))			
+
+				
+				str_val_a_minute_earlier := string(val_a_minute_earlier)
+				str_oneminute_earlier     := strings.Split(str_val_a_minute_earlier, ";")
+				firstentry_oneminute_earlier := strings.Split(str_oneminute_earlier[0], ",")//first reading
+				firstcumulative_oneminute_earlier = firstentry_oneminute_earlier[3]//fourth item
+				//return []byte("firstcumulative_oneminute_earlier -> " + firstcumulative_oneminute_earlier), fmt.Errorf("firstcumulative_oneminute_earlier=" +firstcumulative_oneminute_earlier)			
+
+				secondentry_oneminute_earlier := strings.Split(str_oneminute_earlier[1], ",")//second reading
+				secondcumulative_oneminute_earlier = secondentry_oneminute_earlier[3]//fourth item
+				
+				
+				thirdentry_oneminute_earlier := strings.Split(str_oneminute_earlier[2], ",")//third reading
+				thirdcumulative_oneminute_earlier = thirdentry_oneminute_earlier[3]//fourth item
+				
+				//return []byte("cumulative_oneminute_earlier -> " + firstcumulative_oneminute_earlier +","+secondcumulative_oneminute_earlier+","+thirdcumulative_oneminute_earlier), fmt.Errorf("cumulative_oneminute_earlier=" +firstcumulative_oneminute_earlier +","+secondcumulative_oneminute_earlier+","+thirdcumulative_oneminute_earlier)			
+
+				//return []byte("entries oneminute earlier -> " + firstcumulative_oneminute_earlier+".."+secondcumulative_oneminute_earlier+".."+thirdcumulative_oneminute_earlier), fmt.Errorf("entries one minute earlier" +firstcumulative_oneminute_earlier+".."+secondcumulative_oneminute_earlier+".."+thirdcumulative_oneminute_earlier)			
+
+			}
+
+
+			//val_now, _ := stub.GetState(timestamp)
+			if len(concatstr)>0{// time from user
+
+				//str_val_n:= string(val)
+				str_now     := strings.Split(concatstr, ";")
+				firstreading_now := strings.Split(str_now[0], ",")//first reading
+				firstentry_now := firstreading_now[2]//second item
+				//print(firstentry_now)
+				secondreading_now := strings.Split(str_now[1], ",")//second reading
+				secondentry_now := secondreading_now[2]//second item
+				//print(secondentry_now)
+				thirdreading_now := strings.Split(str_now[2], ",")//third reading
+				thirdentry_now := thirdreading_now[2]//third item
+				//print(thirdentry_now)
+
+				firstcumulative_now1a,_  := strconv.ParseFloat(firstentry_now, 64) 
+				firstcumulative_now1b,_  := strconv.ParseFloat(firstcumulative_oneminute_earlier, 64) 
+				firstcumulative_now      := firstcumulative_now1a+firstcumulative_now1b
+
+
+				secondcumulative_now2a,_ := strconv.ParseFloat(secondentry_now, 64) 
+				secondcumulative_now2b,_ := strconv.ParseFloat(secondcumulative_oneminute_earlier, 64)
+				secondcumulative_now     := secondcumulative_now2a+secondcumulative_now2b
+				
+				thirdcumulative_now3a,_  := strconv.ParseFloat(thirdentry_now, 64) 
+				thirdcumulative_now3b,_  := strconv.ParseFloat(thirdcumulative_oneminute_earlier, 64) 
+				thirdcumulative_now      := thirdcumulative_now3a+thirdcumulative_now3b
+ 
+
+
+
+				str_now[0] = str_now[0] +","+strconv.FormatFloat(firstcumulative_now, 'f', 6, 64)+ ";"
+				str_now[1] = str_now[1] +","+strconv.FormatFloat(secondcumulative_now, 'f', 6, 64)+ ";"
+				str_now[2] = str_now[2] +","+strconv.FormatFloat(thirdcumulative_now, 'f', 6, 64)+ ";"
+				concatstr2 = str_now[0]+str_now[1]+str_now[2]
+
+				//return []byte(""), fmt.Errorf("concatstr2 for non zero" +concatstr2)			
+
+				//return []byte(""), fmt.Errorf("cumulative now" +strconv.FormatFloat(firstcumulative_now, 'f', 6, 64)+".."+strconv.FormatFloat(secondcumulative_now, 'f', 6, 64)+".."+strconv.FormatFloat(thirdcumulative_now, 'f', 6, 64))			
+
+				//return []byte("entries now -> " + firstentry_now+".."+secondentry_now+".."+thirdentry_now), fmt.Errorf("entries now" +firstentry_now+".."+secondentry_now+".."+thirdentry_now)			
+
+			}
+
+			//return []byte("timestamp_a_minute_earlier -> " + timestamp_a_minute_earlier), fmt.Errorf("timestamp_a_minute_earlier" +timestamp_a_minute_earlier+"....val_a_minute_earlier="+string(val_a_minute_earlier)+"...concatstr_now="+string(concatstr)+"...timestamp="+timestamp)			
+		}
+		
+		if  val == nil {
+			//stub.PutState(concatstr + "_" +  clienttimestamp + "_addkey", []byte("proposed"))// []byte(clienttimestamp))
+			//return []byte("Sorry, Key already exists if -> " + concatstr2), fmt.Errorf("Sorry key already exists if..." + concatstr2 + "..." + string(val))			
+
+			stub.PutState(timestamp,[]byte(concatstr2))// []byte(clienttimestamp))	
+			}else{
+			return []byte("Sorry, Key already exists else -> " + concatstr2), fmt.Errorf("Sorry key already exists else..." + concatstr2 + "..." + string(val))			
+		}
+		return []byte("Signature verified successfully"), nil	
+	}
+
+
+	return []byte(concatstr), fmt.Errorf("Signature verification failed")
+}
+
+
+
+
+func (t *TimeStampChecker) checkchange(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	timestamp1   := args[0]
+	timestamp2   := args[1]
+	proposaltype := args[2]
+	resolutionstr := args[3]
+	resolution,_   := strconv.ParseFloat(resolutionstr, 64)  
+	//proposerkey  := args[1]  
+	//timestamp    := args[2]
+	//clienttimestamp := args[3]
+	//hashstr := args[4]
+	//raw_r := args[5]
+	//raw_s := args[6]
+	//var pubkeyStr_proposer string
+	//var concatstr string
+	//var val1 []byte
+	//var val2 []byte
+	//endpoint := "127.0.0.1"
+	var reading1 string
+	var reading2 string
+	var difference float64
+	var counter int64
+	var totalmeters int64
+	var data string
+	var keyis string
+
+					
+	if( proposaltype == "checkchange" ){
+		val1, _ := stub.GetState(timestamp1)//provide client key to get value from ledger if exists
+		val2, _ := stub.GetState(timestamp2)//provide client key to get value from ledger if exists
+		if  (val1 == nil || val2 == nil) {
+			return []byte("Sorry, input timestamp no FOUND... ") , fmt.Errorf("Sorry, input timestamp no FOUND...")			
+			}else{
+					//do anomaly detection here
+					len1 := strings.Count(string(val1), ";")
+					stringSlice1 := strings.Split(string(val1), ";")
+
+
+					len2 := strings.Count(string(val2), ";")
+					stringSlice2 := strings.Split(string(val2), ";")
+					if len1==len2{
+						totalmeters = int64(len1)
+						counter =0
+						for i := 0; i < len1; i++ {
+							secondSplit1 := strings.Split(stringSlice1[i],",")
+							reading1 = secondSplit1[6]
+
+							secondSplit2 := strings.Split(stringSlice2[i],",")
+							reading2 = secondSplit2[6]
+
+							f2,_ := strconv.ParseFloat(reading2, 64)
+							f1,_ := strconv.ParseFloat(reading1, 64)
+
+							difference = f2 - f1
+							if difference >=resolution {
+								if (secondSplit1[0] == secondSplit2[0]){
+									data=data+secondSplit1[0]+"," 
+									counter+=1
+								}
+							}
+						}//end for
+						if(counter>0){
+							data=data+ strconv.FormatInt(counter, 10)+"/"+ strconv.FormatInt(totalmeters, 10)
+							keyis = timestamp1+","+timestamp2+","+resolutionstr
+							stub.PutState(keyis,[]byte(data))// []byte(clienttimestamp))	
+
+						}
+					}else{
+						return []byte("Missing meter entries detected... ") , fmt.Errorf("Missing meter entries detected...")
+
+					}
+
+					//counttoreturn :=  strconv.FormatInt(counter, 10)+"/"+ strconv.FormatInt(totalmeters, 10)
+					return []byte(" input timestamps FOUND... ") , nil //fmt.Errorf("Number of increases found..."+keyis+","+data) 
+					//return []byte(" input timestamps FOUND... ") , fmt.Errorf(" input timestamp FOUND..."+ stringSlice2[len1-1]+"..."+ reading1+"..."+reading2+"..."+fmt.Sprintf("%f", difference)) 
+
+					//return []byte(" input timestamps FOUND... ") , fmt.Errorf(" input timestamp FOUND..."+string(val1)+"......"+string(val2))
+
+
+		}
+			
+	}
+
+	//return []byte("Inside IF"),  fmt.Errorf(args[0],args[1],args[2],string(val1),string(val2))
+	return []byte("Done"),nil 
+}
